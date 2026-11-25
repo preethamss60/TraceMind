@@ -19,6 +19,8 @@ pip install -r requirements.txt
 python run.py
 ```
 
+Python 3.10+ is required. If the Windows Python launcher is unavailable, use the path to your installed interpreter instead (for example, `C:\Python312\python.exe -m pip install -r requirements.txt`).
+
 Open `http://127.0.0.1:5000`. In production, set a non-default `TRACEMIND_SECRET_KEY` environment variable and run behind a production WSGI server.
 
 ## Structure
@@ -49,7 +51,7 @@ run.py               development entry point
 
 ## Engine handoff
 
-No analysis is faked. Until the real engine is connected, uploads remain `uploaded`, and the dashboard accurately shows zero parsed results. The exact schema contract and persistence expectations are in [engine/README.md](engine/README.md). Once Person 1 supplies an adapter, validate its output, store `LogEntry` and `RCAReport` rows in a single transaction, then set the upload status to `analyzed`.
+No analysis is faked. Until the real engine is connected, uploads remain `uploaded`, and the dashboard accurately shows zero parsed results. The exact schema contract and persistence expectations are in [engine/README.md](engine/README.md). The currently present `engine/pipeline.py` is only a zero-result stub and its parser/detector files are empty, so it is intentionally not invoked. Once Person 1 supplies a non-stub adapter conforming to that contract, validate its output, store `LogEntry` and `RCAReport` rows in a single transaction, then set the upload status to `analyzed`.
 
 Before sending log content to any external LLM, the integration adapter must redact secrets, tokens, credentials, and personally identifiable values. Keep provider credentials in environment variables only.
 
@@ -59,7 +61,7 @@ Before sending log content to any external LLM, the integration adapter must red
 python -m unittest discover -s tests -v
 ```
 
-The suite covers app/database startup, allowed uploads, empty/invalid/oversized files, duplicate original names, dashboard metrics, cluster API and detail persistence, missing IDs, and empty cluster data. It uses the Flask test client, which exercises the frontend's implemented API contract; browser visual testing is still recommended after dependency installation.
+The suite covers app/database startup, allowed uploads, empty/invalid/oversized files, duplicate original names, file storage, restart persistence, dashboard metrics, cluster and detail evidence APIs, missing IDs, empty cluster data, and rendered frontend/API wiring. It uses the Flask test client; perform a visual browser review after changing UI styles or third-party CDN settings.
 
 ## Team responsibility
 

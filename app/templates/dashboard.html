@@ -1,1 +1,50 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TraceMind | Dashboard</title><link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"></head><body><div class="dashboard-layout"><aside><a class="brand" href="/">Trace<span>Mind</span></a><nav><a class="active" href="#overview">Overview</a><a href="#timeline">Error timeline</a><a href="#clusters">Incident clusters</a></nav><div class="side-note">Log intelligence<br><small>Evidence-led debugging</small></div></aside><main class="dashboard-main"><header><div><p class="eyebrow">ANALYSIS DASHBOARD</p><h1 id="uploaded-filename">Loading upload…</h1><p id="upload-meta"></p></div><a href="/" class="secondary-button">Upload another log</a></header><div id="page-message" class="page-message" role="alert"></div><section id="overview" class="metric-grid"><article><span>Total entries</span><strong id="total-count">—</strong></article><article><span>Errors</span><strong id="error-count">—</strong></article><article><span>Warnings</span><strong id="warn-count">—</strong></article><article><span>Fatal errors</span><strong id="fatal-count">—</strong></article><article><span>Anomalies</span><strong id="anomaly-count">—</strong></article></section><section class="chart-grid"><article id="timeline" class="panel"><div class="panel-heading"><h2>Error timeline</h2><span>Errors + fatal events</span></div><div class="chart-wrap"><canvas id="timeline-chart"></canvas><p class="empty-chart" id="timeline-empty" hidden>No timestamped error events are available yet.</p></div></article><article class="panel"><div class="panel-heading"><h2>Severity distribution</h2><span>All parsed entries</span></div><div class="chart-wrap"><canvas id="severity-chart"></canvas><p class="empty-chart" id="severity-empty" hidden>No parsed log entries are available yet.</p></div></article></section><section id="clusters" class="panel clusters-panel"><div class="panel-heading"><div><h2>Incident clusters</h2><span>Clusters produced by the analysis engine</span></div></div><div class="table-wrap"><table><thead><tr><th>Cluster</th><th>Error summary</th><th>Occurrences</th><th>Severity</th></tr></thead><tbody id="cluster-rows"><tr><td colspan="4" class="table-state">Loading clusters…</td></tr></tbody></table></div></section></main></div><aside id="detail-panel" class="detail-panel" aria-hidden="true"><button id="close-detail" aria-label="Close details">×</button><p class="eyebrow">INCIDENT DETAIL</p><h2 id="detail-title">Cluster</h2><div id="detail-content"></div></aside><div id="panel-scrim" class="panel-scrim"></div><script>window.TRACEMIND_UPLOAD_ID={{ upload_id|tojson }};</script><script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js" integrity="sha384-+lYy9PjDO7W3Rk9L7SMxT9rLTvMIw1R4I7hP6F+PVIJT70gQgV/6MswgoBl0Rq9Y" crossorigin="anonymous"></script><script src="{{ url_for('static', filename='js/dashboard.js') }}"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>TraceMind | Dashboard</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="dashboard-layout">
+    <aside>
+      <a class="brand" href="/">Trace<span>Mind</span></a>
+      <nav aria-label="Dashboard sections">
+        <a class="active" href="#overview">Overview</a>
+        <a href="#timeline">Error timeline</a>
+        <a href="#clusters">Incident clusters</a>
+      </nav>
+      <div class="side-note">Log intelligence<br><small>Evidence-led debugging</small></div>
+    </aside>
+    <main class="dashboard-main">
+      <header>
+        <div>
+          <p class="eyebrow">ANALYSIS DASHBOARD</p>
+          <h1 id="uploaded-filename">Loading upload...</h1>
+          <p id="upload-meta"></p>
+        </div>
+        <a href="/" class="secondary-button">Upload another log</a>
+      </header>
+      <div id="page-message" class="page-message" role="alert"></div>
+      <section id="overview" class="metric-grid" aria-label="Log statistics">
+        <article><span>Total entries</span><strong id="total-count">-</strong></article>
+        <article><span>Errors</span><strong id="error-count">-</strong></article>
+        <article><span>Warnings</span><strong id="warn-count">-</strong></article>
+        <article><span>Fatal errors</span><strong id="fatal-count">-</strong></article>
+        <article><span>Anomalies</span><strong id="anomaly-count">-</strong></article>
+      </section>
+      <section class="chart-grid">
+        <article id="timeline" class="panel"><div class="panel-heading"><h2>Error timeline</h2><span>Errors + fatal events</span></div><div class="chart-wrap"><canvas id="timeline-chart"></canvas><p class="empty-chart" id="timeline-empty" hidden>No timestamped error events are available yet.</p></div></article>
+        <article class="panel"><div class="panel-heading"><h2>Severity distribution</h2><span>All parsed entries</span></div><div class="chart-wrap"><canvas id="severity-chart"></canvas><p class="empty-chart" id="severity-empty" hidden>No parsed log entries are available yet.</p></div></article>
+      </section>
+      <section id="clusters" class="panel clusters-panel"><div class="panel-heading"><div><h2>Incident clusters</h2><span>Clusters produced by the analysis engine</span></div></div><div class="table-wrap"><table><thead><tr><th>Cluster</th><th>Error summary</th><th>Occurrences</th><th>Severity</th></tr></thead><tbody id="cluster-rows"><tr><td colspan="4" class="table-state">Loading clusters...</td></tr></tbody></table></div></section>
+    </main>
+  </div>
+  <aside id="detail-panel" class="detail-panel" aria-hidden="true"><button id="close-detail" aria-label="Close details">&times;</button><p class="eyebrow">INCIDENT DETAIL</p><h2 id="detail-title">Cluster</h2><div id="detail-content"></div></aside>
+  <div id="panel-scrim" class="panel-scrim"></div>
+  <script>window.TRACEMIND_UPLOAD_ID = {{ upload_id|tojson }};</script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+</html>

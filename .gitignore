@@ -1,4 +1,7 @@
 venv/
+.venv/
+.python/
+python-installer.exe
 __pycgit add .gitignore requirements.txt run.py
 *.py[cod]
 instance/*.db

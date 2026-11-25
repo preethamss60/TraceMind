@@ -12,7 +12,9 @@ def create_app(test_config=None):
     instance_path = Path(app.instance_path)
     upload_path = Path(app.root_path).parent / "uploads"
     app.config.from_mapping(
-        SECRET_KEY=os.environ.get("TRACEMIND_SECRET_KEY", "change-this-for-production"),
+        # A configured secret is required for persistent production sessions; a
+        # fresh secure value keeps local development safe when it is absent.
+        SECRET_KEY=os.environ.get("TRACEMIND_SECRET_KEY") or os.urandom(32),
         SQLALCHEMY_DATABASE_URI=f"sqlite:///{instance_path / 'tracemind.db'}",
         SQLALCHEMY_TRACK_MODIFICATIONS=False,
         UPLOAD_FOLDER=str(upload_path),
@@ -45,6 +47,15 @@ def create_app(test_config=None):
     @app.errorhandler(404)
     def not_found(_error):
         return jsonify(success=False, error="Resource not found."), 404
+
+    @app.errorhandler(405)
+    def method_not_allowed(_error):
+        return jsonify(success=False, error="Method not allowed."), 405
+
+    @app.errorhandler(500)
+    def server_error(error):
+        app.logger.exception("Unhandled application error", exc_info=error)
+        return jsonify(success=False, error="An unexpected server error occurred."), 500
 
     with app.app_context():
         db.create_all()

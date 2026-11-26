@@ -1,6 +1,6 @@
-from collections import Counter
-from datetime import timezone
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional
 from uuid import uuid4
 
 from flask import Blueprint, current_app, jsonify, request
@@ -11,6 +11,58 @@ from ..models import RCAReport, LogEntry, Upload, db
 
 api_bp = Blueprint("api", __name__)
 ALLOWED_EXTENSIONS = {"log", "txt"}
+
+
+# ---------------------------------------------------------------------------
+# Engine integration helpers
+# ---------------------------------------------------------------------------
+
+def _parse_iso(ts_str: Optional[str]) -> Optional[datetime]:
+    """Convert an ISO-8601 string from the engine to a tz-aware datetime."""
+    if not ts_str:
+        return None
+    try:
+        dt = datetime.fromisoformat(ts_str)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
+    except (ValueError, TypeError):
+        return None
+
+
+def _persist_analysis(upload_id: int, result: dict) -> None:
+    """
+    Persist engine output (entries + reports) in a single transaction.
+    Invalid or missing fields are silently coerced so a partial result
+    never blocks the commit.
+    """
+    for entry in result.get("entries") or []:
+        db.session.add(LogEntry(
+            upload_id=upload_id,
+            timestamp=_parse_iso(entry.get("timestamp")),
+            level=str(entry.get("level") or "UNKNOWN")[:16],
+            message=str(entry.get("message") or ""),
+            is_anomaly=bool(entry.get("is_anomaly", False)),
+            cluster_id=(str(entry["cluster_id"])[:100] if entry.get("cluster_id") else None),
+        ))
+
+    for report in result.get("reports") or []:
+        cluster_id = str(report.get("cluster_id") or "")[:100]
+        if not cluster_id:
+            continue
+        score = report.get("severity_score")
+        try:
+            score = float(score) if score is not None else None
+        except (TypeError, ValueError):
+            score = None
+        db.session.add(RCAReport(
+            upload_id=upload_id,
+            cluster_id=cluster_id,
+            error_summary=str(report.get("error_summary") or "") or None,
+            root_cause=str(report.get("root_cause") or "") or None,
+            suggested_fix=str(report.get("suggested_fix") or "") or None,
+            severity_score=score,
+        ))
 
 
 def _json_error(message, status):
@@ -55,6 +107,26 @@ def upload_file():
         destination.unlink(missing_ok=True)
         current_app.logger.exception("Upload failed")
         return _json_error("Could not store the uploaded file.", 500)
+    # ── Run the analysis engine (best-effort; failures keep status "uploaded") ──
+    try:
+        from engine.pipeline import run_analysis  # noqa: PLC0415
+        result = run_analysis(destination)
+        _persist_analysis(record.id, result)
+        record.status = "analyzed"
+        db.session.commit()
+        current_app.logger.info("Engine analysis complete for upload %d", record.id)
+    except ImportError:
+        current_app.logger.info(
+            "Engine dependencies not installed; skipping analysis for upload %d. "
+            "Install requirements-engine.txt to enable it.",
+            record.id,
+        )
+    except Exception:
+        db.session.rollback()
+        current_app.logger.exception(
+            "Engine analysis failed for upload %d; upload record is preserved.", record.id
+        )
+
     return jsonify(success=True, upload_id=record.id, filename=record.filename, status=record.status), 201
 
 

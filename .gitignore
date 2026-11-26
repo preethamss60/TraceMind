@@ -2,10 +2,11 @@ venv/
 .venv/
 .python/
 python-installer.exe
-__pycgit add .gitignore requirements.txt run.py
+__pycache__/
 *.py[cod]
 instance/*.db
 uploads/*
 !uploads/.gitkeep
 .env
 .pytest_cache/
+engine/models/*.pkl
